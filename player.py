@@ -37,7 +37,6 @@ def sw1_callback(channel):
 def sw2_callback(channel):
     global sw2_cnt
     sw2_cnt=sw2_cnt+1
-#    print(str(sw2_cnt))
 
 def sw3_callback(channel):
     global sw3_cnt
@@ -56,16 +55,27 @@ def audiobook_skip(aindex):
     #subprocess.call(['killall', 'mpg123'])
 
 def music_skip(mindex):
-    global sw1_cnt
-    sw1_cnt-=1
+    global sw2_cnt
+    sw2_cnt-=1
     print("skip the track")
+   
 
-def album_skip(subindex,mindex):
-    global sw1_cnt
-    sw1_cnt-=2
-    print("skip the alub")
+def album_skip():
+    global sw2_cnt
+    global music_path
+    global album
+    global music_playlist_path
+    global music_playlist
+    global subindex
+    global mindex
+    sw2_cnt-=2
+    print("skip the album")
     subindex+=1
+    if subindex >= len(album):
+       subindex=0 
     mindex=0
+    music_playlist_path=music_path + album[subindex] +"/"+ "playlist.txt"
+    music_playlist=file_read(music_playlist_path)
 
 GPIO.setwarnings(False) # Ignore warning for now
 GPIO.setmode(GPIO.BOARD) # Use physical pin numbering
@@ -80,16 +90,15 @@ GPIO.add_event_detect(sw4,GPIO.RISING,callback=sw4_callback,bouncetime=300)
 
 audiobook_path="./media/audiobooks/"
 music_path="./media/music/"
-album=next(os.walk(music_path))[1]
-print(album)
-playlist_path=audiobook_path + "playlist.txt"
-music_playlist=music_path + "playlist.txt"
-audiobook_playlist=file_read(playlist_path)
-audiobook_number= sum(1 for line in open(playlist_path))
 aindex=0
 subindex=0
 mindex=0
 last=0
+album=next(os.walk(music_path))[1]
+audio_playlist_path=audiobook_path + "playlist.txt"
+music_playlist_path=music_path + album[subindex] +"/"+ "playlist.txt"
+audiobook_playlist=file_read(audio_playlist_path)
+music_playlist=file_read(music_playlist_path)
 
 while True:
    if(sw1_cnt==1 and audio_mode==0):
@@ -120,7 +129,7 @@ while True:
    elif(sw2_cnt==1 and music_mode==1):
       if(mindex >=len(music_playlist)):
          mindex=0
-      print(music_path+"/"+album[subindex].rstrip()+"/"+ music_playlist[mindex].rstrip())
+      print(music_path+album[subindex].rstrip()+"/"+ music_playlist[mindex].rstrip())
       time.sleep(3)
       mindex+=1
    elif(sw2_cnt==2):
@@ -128,7 +137,7 @@ while True:
       music_skip(mindex)
    elif(sw2_cnt==3):
       print("Double Click : Change the Album")
-      album_skip(subindex,mindex)
+      album_skip()
 
    if(sw3_cnt==1 and light_mode1==0):
       print("Play the light1")
